@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAY ONE ACADEMIC CENTRE — Courses &amp; Payment</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">
+    <div class="crest">H1</div>
+    <div class="brand">
+      <span class="name">Hay One Academic Centre</span>
+      <span class="tag">tutorial registration</span>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step done"><span class="num">01</span> Sign up</div>
+    <div class="step active"><span class="num">02</span> Courses &amp; payment</div>
+    <div class="step"><span class="num">03</span> Join WhatsApp</div>
+  </div>
+
+  <div class="card">
+    <h1>Choose your courses</h1>
+    <p class="sub" id="greeting">GST/ENT/GNS/EDU is included free for everyone. Pick any 2 more subjects below.</p>
+
+    <div class="free-chip">
+      <span class="lbl">GST / ENT / GNS / EDU</span>
+      <span class="badge">FREE — INCLUDED</span>
+    </div>
+
+    <label>Pick exactly 2 subjects</label>
+    <div class="course-grid" id="courseGrid">
+      <label class="course-opt"><input type="checkbox" name="course" value="ECO"><span class="code">ECO</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="BIO"><span class="code">BIO</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="ACC"><span class="code">ACC</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="CHM"><span class="code">CHM</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="PHY"><span class="code">PHY</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="MAT"><span class="code">MAT</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="BUSINESS MATHS"><span class="code">BUSINESS MATHS</span></label>
+    </div>
+    <div class="error" id="courseError">Please select exactly 2 subjects.</div>
+
+    <div class="price-row">
+      <span class="label">MONTHLY FEE</span>
+      <span class="amount">₦7,000</span>
+    </div>
+
+    <div class="pay-details">
+      <div class="row">
+        <span class="k">BANK</span>
+        <span class="v">PalmPay</span>
+      </div>
+      <div class="row">
+        <span class="k">ACCOUNT NO.</span>
+        <span class="v" id="acctNum">7018203064</span>
+        <button type="button" class="copy-btn" id="copyBtn">Copy</button>
+      </div>
+      <div class="row">
+        <span class="k">ACCOUNT NAME</span>
+        <span class="v">Lamina Abdulwaliu Adeboye</span>
+      </div>
+    </div>
+
+    <form id="courseForm" style="margin-top:22px;">
+      <label for="screenshot">Upload payment screenshot</label>
+      <div class="file-drop" id="fileDrop">
+        <input type="file" id="screenshot" name="screenshot" accept="image/*" required>
+        <div class="hint">Tap to choose a screenshot of your payment</div>
+        <div class="filename" id="filename"></div>
+      </div>
+      <div class="error" id="fileError">Please attach your payment screenshot.</div>
+
+      <button type="submit" id="submitBtn">Submit payment →</button>
+      <div class="status" id="statusMsg"></div>
+    </form>
+  </div>
+
+  <p class="footer-note">Having trouble? Call or WhatsApp <a href="tel:07018203064">0701 820 3064</a></p>
+</div>
+
+<script src="config.js"></script>
+<script>
+// redirect back to step 1 if they skipped signup
+if(!sessionStorage.getItem('h1_name')){
+  window.location.href = 'index.html';
+}
+document.getElementById('greeting').textContent =
+  'Hi ' + sessionStorage.getItem('h1_name') + ', GST/ENT/GNS/EDU is included free. Pick any 2 more subjects below.';
+
+const grid = document.getElementById('courseGrid');
+const checkboxes = Array.from(grid.querySelectorAll('input[type="checkbox"]'));
+const courseError = document.getElementById('courseError');
+
+function refreshCourseUI(){
+  const checked = checkboxes.filter(c => c.checked);
+  checkboxes.forEach(c => {
+    c.closest('.course-opt').classList.toggle('checked', c.checked);
+    c.disabled = (checked.length >= 2 && !c.checked);
+  });
+}
+checkboxes.forEach(c => c.addEventListener('change', refreshCourseUI));
+refreshCourseUI();
+
+// file input display
+const fileInput = document.getElementById('screenshot');
+const filenameEl = document.getElementById('filename');
+fileInput.addEventListener('change', () => {
+  filenameEl.textContent = fileInput.files.length ? fileInput.files[0].name : '';
+});
+
+// copy account number
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const acct = document.getElementById('acctNum').textContent;
+  navigator.clipboard.writeText(acct).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = original, 1500);
+  });
+});
+
+const form = document.getElementById('courseForm');
+const submitBtn = document.getElementById('submitBtn');
+const statusMsg = document.getElementById('statusMsg');
+const fileError = document.getElementById('fileError');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  courseError.classList.remove('show');
+  fileError.classList.remove('show');
+
+  const checked = checkboxes.filter(c => c.checked).map(c => c.value);
+  let valid = true;
+
+  if(checked.length !== 2){
+    courseError.classList.add('show');
+    valid = false;
+  }
+  if(!fileInput.files.length){
+    fileError.classList.add('show');
+    valid = false;
+  }
+  if(!valid) return;
+
+  sessionStorage.setItem('h1_courses', JSON.stringify(checked));
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+  statusMsg.classList.remove('show');
+
+  try {
+    if (window.HAYONE_FORM_ENDPOINT && !window.HAYONE_FORM_ENDPOINT.includes('YOUR_FORM_ID')) {
+      const fd = new FormData();
+      fd.append('name', sessionStorage.getItem('h1_name'));
+      fd.append('phone', sessionStorage.getItem('h1_phone'));
+      fd.append('email', sessionStorage.getItem('h1_email'));
+      fd.append('subjects', 'GST/ENT/GNS/EDU (free) + ' + checked.join(' + '));
+      fd.append('screenshot', fileInput.files[0]);
+      fd.append('_subject', 'Payment submitted — ' + sessionStorage.getItem('h1_name'));
+      fd.append('form_type', 'Step 2: Courses & Payment');
+
+      const res = await fetch(window.HAYONE_FORM_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: fd
+      });
+      if (!res.ok) throw new Error('Network response was not ok');
+    }
+    window.location.href = 'confirm.html';
+  } catch (err) {
+    console.error(err);
+    window.location.href = 'confirm.html';
+  }
+});
+</script>
+</body>
+</html>
