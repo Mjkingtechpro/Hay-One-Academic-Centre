@@ -10,30 +10,35 @@
 <div class="wrap">
 
   <div class="eyebrow">
-    <div class="crest">H1</div>
+    <div class="crest"><img src="assets/logo.png" alt="Hay One Academic Centre logo"></div>
     <div class="brand">
       <span class="name">Hay One Academic Centre</span>
       <span class="tag">tutorial registration</span>
     </div>
   </div>
 
-  <div class="steps">
-    <div class="step done"><span class="num">01</span> Sign up</div>
-    <div class="step active"><span class="num">02</span> Courses &amp; payment</div>
-    <div class="step"><span class="num">03</span> Join WhatsApp</div>
-  </div>
-
   <div class="card">
     <h1>Choose your courses</h1>
-    <p class="sub" id="greeting">GST/ENT/GNS/EDU is included free for everyone. Pick any 2 more subjects below.</p>
+    <p class="sub" id="greeting">Pick your level, then select your courses below.</p>
 
-    <div class="free-chip">
-      <span class="lbl">GST / ENT / GNS / EDU</span>
-      <span class="badge">FREE — INCLUDED</span>
+    <div class="level-section">
+      <label>Your level</label>
+      <div class="level-pills" id="levelPills">
+        <label class="level-pill"><input type="radio" name="level" value="100L">100L</label>
+        <label class="level-pill"><input type="radio" name="level" value="200L">200L</label>
+        <label class="level-pill"><input type="radio" name="level" value="300L">300L</label>
+        <label class="level-pill"><input type="radio" name="level" value="400L">400L</label>
+        <label class="level-pill"><input type="radio" name="level" value="500L">500L</label>
+      </div>
+      <div class="error" id="levelError">Please select your level.</div>
     </div>
 
-    <label>Pick exactly 2 subjects</label>
+    <label>Select your courses (GST, ENT, GNS and EDU are free for everyone)</label>
     <div class="course-grid" id="courseGrid">
+      <label class="course-opt free"><input type="checkbox" checked disabled><span class="code">GST</span><span class="free-tag">FREE</span></label>
+      <label class="course-opt free"><input type="checkbox" checked disabled><span class="code">ENT</span><span class="free-tag">FREE</span></label>
+      <label class="course-opt free"><input type="checkbox" checked disabled><span class="code">GNS</span><span class="free-tag">FREE</span></label>
+      <label class="course-opt free"><input type="checkbox" checked disabled><span class="code">EDU</span><span class="free-tag">FREE</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="ECO"><span class="code">ECO</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="BIO"><span class="code">BIO</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="ACC"><span class="code">ACC</span></label>
@@ -42,12 +47,19 @@
       <label class="course-opt"><input type="checkbox" name="course" value="MAT"><span class="code">MAT</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="BUSINESS MATHS"><span class="code">BUSINESS MATHS</span></label>
     </div>
-    <div class="error" id="courseError">Please select exactly 2 subjects.</div>
+    <div class="free-note">GST, ENT, GNS and EDU are already included free — no need to select them.</div>
+    <div class="error" id="courseError">Please select at least 2 courses.</div>
 
     <div class="price-row">
       <span class="label">MONTHLY FEE</span>
       <span class="amount">₦7,000</span>
     </div>
+    <p class="price-note">
+      <strong>₦7,000 covers any 2 courses</strong> (plus GST, ENT, GNS &amp; EDU, which are always free).
+      Choosing more than 2 attracts an extra fee — call or WhatsApp
+      <a href="tel:07018203064">0701 820 3064</a> to enquire about the exact amount before you pay.
+    </p>
+    <div class="extra-note" id="extraNote">You've selected more than 2 courses — an extra fee applies. Please confirm the amount with 0701 820 3064 before sending payment.</div>
 
     <div class="pay-details">
       <div class="row">
@@ -89,18 +101,30 @@ if(!sessionStorage.getItem('h1_name')){
   window.location.href = 'index.html';
 }
 document.getElementById('greeting').textContent =
-  'Hi ' + sessionStorage.getItem('h1_name') + ', GST/ENT/GNS/EDU is included free. Pick any 2 more subjects below.';
+  'Hi ' + sessionStorage.getItem('h1_name') + ', pick your level, then select your courses below.';
+
+// level pills
+const levelPills = document.querySelectorAll('#levelPills .level-pill');
+const levelError = document.getElementById('levelError');
+levelPills.forEach(p => {
+  const input = p.querySelector('input');
+  input.addEventListener('change', () => {
+    levelPills.forEach(x => x.classList.remove('checked'));
+    p.classList.add('checked');
+  });
+});
 
 const grid = document.getElementById('courseGrid');
-const checkboxes = Array.from(grid.querySelectorAll('input[type="checkbox"]'));
+const checkboxes = Array.from(grid.querySelectorAll('input[type="checkbox"]:not([disabled])'));
 const courseError = document.getElementById('courseError');
+const extraNote = document.getElementById('extraNote');
 
 function refreshCourseUI(){
   const checked = checkboxes.filter(c => c.checked);
   checkboxes.forEach(c => {
     c.closest('.course-opt').classList.toggle('checked', c.checked);
-    c.disabled = (checked.length >= 2 && !c.checked);
   });
+  extraNote.classList.toggle('show', checked.length > 2);
 }
 checkboxes.forEach(c => c.addEventListener('change', refreshCourseUI));
 refreshCourseUI();
@@ -132,11 +156,17 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   courseError.classList.remove('show');
   fileError.classList.remove('show');
+  levelError.classList.remove('show');
 
+  const level = document.querySelector('#levelPills input[name="level"]:checked');
   const checked = checkboxes.filter(c => c.checked).map(c => c.value);
   let valid = true;
 
-  if(checked.length !== 2){
+  if(!level){
+    levelError.classList.add('show');
+    valid = false;
+  }
+  if(checked.length < 2){
     courseError.classList.add('show');
     valid = false;
   }
@@ -147,6 +177,7 @@ form.addEventListener('submit', async (e) => {
   if(!valid) return;
 
   sessionStorage.setItem('h1_courses', JSON.stringify(checked));
+  sessionStorage.setItem('h1_level', level.value);
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Sending...';
@@ -158,7 +189,9 @@ form.addEventListener('submit', async (e) => {
       fd.append('name', sessionStorage.getItem('h1_name'));
       fd.append('phone', sessionStorage.getItem('h1_phone'));
       fd.append('email', sessionStorage.getItem('h1_email'));
-      fd.append('subjects', 'GST/ENT/GNS/EDU (free) + ' + checked.join(' + '));
+      fd.append('department', sessionStorage.getItem('h1_department'));
+      fd.append('level', level.value);
+      fd.append('subjects', 'GST + ENT + GNS + EDU (free) + ' + checked.join(' + '));
       fd.append('screenshot', fileInput.files[0]);
       fd.append('_subject', 'Payment submitted — ' + sessionStorage.getItem('h1_name'));
       fd.append('form_type', 'Step 2: Courses & Payment');

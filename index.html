@@ -9,18 +9,16 @@
 <body>
 <div class="wrap">
 
+  <div class="banner-wrap">
+    <img src="assets/banner.jpg" alt="HAY ONE ACADEMIC CENTRE — Join for quality tutorial classes">
+  </div>
+
   <div class="eyebrow">
-    <div class="crest">H1</div>
+    <div class="crest"><img src="assets/logo.png" alt="Hay One Academic Centre logo"></div>
     <div class="brand">
       <span class="name">Hay One Academic Centre</span>
       <span class="tag">tutorial registration</span>
     </div>
-  </div>
-
-  <div class="steps">
-    <div class="step active"><span class="num">01</span> Sign up</div>
-    <div class="step"><span class="num">02</span> Courses &amp; payment</div>
-    <div class="step"><span class="num">03</span> Join WhatsApp</div>
   </div>
 
   <div class="card">
@@ -36,6 +34,9 @@
 
       <label for="email">Email address</label>
       <input type="email" id="email" name="email" placeholder="e.g. you@email.com" required>
+
+      <label for="department">Department</label>
+      <input type="text" id="department" name="department" placeholder="e.g. Computer Science" required>
 
       <div class="error" id="formError">Please fill in all fields correctly.</div>
 
@@ -61,8 +62,9 @@ form.addEventListener('submit', async (e) => {
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
+  const department = document.getElementById('department').value.trim();
 
-  if(!name || !phone || !email){
+  if(!name || !phone || !email || !department){
     formError.textContent = 'Please fill in all fields.';
     formError.classList.add('show');
     return;
@@ -72,6 +74,7 @@ form.addEventListener('submit', async (e) => {
   sessionStorage.setItem('h1_name', name);
   sessionStorage.setItem('h1_phone', phone);
   sessionStorage.setItem('h1_email', email);
+  sessionStorage.setItem('h1_department', department);
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Sending...';
@@ -79,15 +82,13 @@ form.addEventListener('submit', async (e) => {
 
   try {
     if (window.HAYONE_FORM_ENDPOINT && !window.HAYONE_FORM_ENDPOINT.includes('YOUR_FORM_ID')) {
+      const fd = new FormData(form);
+      fd.append('_subject', 'New sign up — ' + name);
+      fd.append('form_type', 'Step 1: Signup');
       const res = await fetch(window.HAYONE_FORM_ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },
-        body: new FormData(form).append ? (() => {
-          const fd = new FormData(form);
-          fd.append('_subject', 'New sign up — ' + name);
-          fd.append('form_type', 'Step 1: Signup');
-          return fd;
-        })() : new FormData(form)
+        body: fd
       });
       if (!res.ok) throw new Error('Network response was not ok');
     }
