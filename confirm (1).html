@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAY ONE ACADEMIC CENTRE — You're In</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">
+    <div class="crest"><img src="assets/logo.png" alt="Hay One Academic Centre logo"></div>
+    <div class="brand">
+      <span class="name">Hay One Academic Centre</span>
+      <span class="tag">tutorial registration</span>
+    </div>
+  </div>
+
+  <div class="card center">
+    <div class="check-circle">✓</div>
+    <h1>You're all set</h1>
+    <p class="sub" id="summary">Your registration has been received. Tap below to join the class WhatsApp group — your tutor will confirm your payment there.</p>
+
+    <a href="#" class="btn wa-btn" id="waBtn" target="_blank" rel="noopener">Join the WhatsApp group →</a>
+
+    <p class="inquiry">For inquiries, call or WhatsApp <a href="tel:07018203064">0701 820 3064</a></p>
+  </div>
+</div>
+
+<script>
+const name = sessionStorage.getItem('h1_name') || '';
+const department = sessionStorage.getItem('h1_department') || '';
+
+if(name){
+  document.getElementById('summary').textContent =
+    'Thanks, ' + name + '! Your registration has been received. Tap below to join the class WhatsApp group — your tutor will confirm your payment there.';
+}
+
+const message = `Hello, I just subscribed to HAY ONE ACADEMIC CENTRE. My name is ${name || '___'}, and my department is ${department || '___'}.`;
+const waLink = 'https://wa.me/2347018203064?text=' + encodeURIComponent(message);
+document.getElementById('waBtn').href = waLink;
+</script>
+</body>
+</html>
