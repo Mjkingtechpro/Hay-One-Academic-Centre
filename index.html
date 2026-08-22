@@ -38,6 +38,13 @@
       <label for="department">Department</label>
       <input type="text" id="department" name="department" placeholder="e.g. Computer Science" required>
 
+      <label>Class type</label>
+      <div class="level-pills" id="classTypePills">
+        <label class="level-pill"><input type="radio" name="classType" value="Offline">Offline</label>
+        <label class="level-pill"><input type="radio" name="classType" value="Online">Online</label>
+      </div>
+      <div class="error" id="classTypeError">Please choose online or offline class.</div>
+
       <div class="error" id="formError">Please fill in all fields correctly.</div>
 
       <button type="submit" id="submitBtn">Continue to courses →</button>
@@ -54,27 +61,46 @@ const form = document.getElementById('signupForm');
 const submitBtn = document.getElementById('submitBtn');
 const statusMsg = document.getElementById('statusMsg');
 const formError = document.getElementById('formError');
+const classTypeError = document.getElementById('classTypeError');
+
+const classTypePills = document.querySelectorAll('#classTypePills .level-pill');
+classTypePills.forEach(p => {
+  const input = p.querySelector('input');
+  input.addEventListener('change', () => {
+    classTypePills.forEach(x => x.classList.remove('checked'));
+    p.classList.add('checked');
+  });
+});
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   formError.classList.remove('show');
+  classTypeError.classList.remove('show');
 
   const name = document.getElementById('name').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
   const department = document.getElementById('department').value.trim();
+  const classType = document.querySelector('#classTypePills input[name="classType"]:checked');
 
+  let valid = true;
   if(!name || !phone || !email || !department){
     formError.textContent = 'Please fill in all fields.';
     formError.classList.add('show');
-    return;
+    valid = false;
   }
+  if(!classType){
+    classTypeError.classList.add('show');
+    valid = false;
+  }
+  if(!valid) return;
 
   // save for later pages
   sessionStorage.setItem('h1_name', name);
   sessionStorage.setItem('h1_phone', phone);
   sessionStorage.setItem('h1_email', email);
   sessionStorage.setItem('h1_department', department);
+  sessionStorage.setItem('h1_classType', classType.value);
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Sending...';

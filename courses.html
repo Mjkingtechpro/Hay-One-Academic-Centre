@@ -46,15 +46,11 @@
       <label class="course-opt"><input type="checkbox" name="course" value="PHY"><span class="code">PHY</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="MAT"><span class="code">MAT</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="BUSINESS MATHS"><span class="code">BUSINESS MATHS</span></label>
-      <label class="course-opt"><input type="checkbox" id="othersCheck" value="OTHERS"><span class="code">OTHERS</span></label>
+      <label class="course-opt"><input type="checkbox" name="course" value="OTHERS"><span class="code">OTHERS</span></label>
     </div>
     <div class="free-note">GST, ENT, GNS and EDU are already included free — no need to select them.</div>
 
-    <div id="othersFieldWrap" style="display:none; margin-top:14px;">
-      <label for="othersInput">Type your course code(s)</label>
-      <input type="text" id="othersInput" placeholder="e.g. GEO, POL">
-      <div class="error" id="othersError">Please type the course code(s).</div>
-    </div>
+    <div id="codesSection"></div>
 
     <div class="error" id="courseError">Please select at least 2 courses.</div>
 
@@ -126,15 +122,44 @@ const grid = document.getElementById('courseGrid');
 const checkboxes = Array.from(grid.querySelectorAll('input[type="checkbox"]:not([disabled])'));
 const courseError = document.getElementById('courseError');
 const extraNote = document.getElementById('extraNote');
-const othersCheck = document.getElementById('othersCheck');
-const othersFieldWrap = document.getElementById('othersFieldWrap');
-const othersInput = document.getElementById('othersInput');
-const othersError = document.getElementById('othersError');
+const codesSection = document.getElementById('codesSection');
+const codesData = {}; // remembers typed codes even if a course is unchecked then rechecked
 
-othersCheck.addEventListener('change', () => {
-  othersFieldWrap.style.display = othersCheck.checked ? 'block' : 'none';
-  if(!othersCheck.checked){ othersInput.value = ''; }
-});
+function buildCodesSection(){
+  codesSection.innerHTML = '';
+  checkboxes.filter(c => c.checked).forEach(c => {
+    const val = c.value;
+    const row = document.createElement('div');
+    row.style.marginTop = '14px';
+
+    const label = document.createElement('label');
+    label.setAttribute('for', 'code_' + val.replace(/\s+/g, '_'));
+    label.textContent = (val === 'OTHERS')
+      ? 'Type your course name & code'
+      : val + ' — course code (optional)';
+    row.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'code_' + val.replace(/\s+/g, '_');
+    input.placeholder = (val === 'OTHERS')
+      ? 'e.g. Geography - GEO212'
+      : 'e.g. ' + val + '212 or ' + val + '202';
+    input.value = codesData[val] || '';
+    input.addEventListener('input', () => { codesData[val] = input.value; });
+    row.appendChild(input);
+
+    if(val === 'OTHERS'){
+      const err = document.createElement('div');
+      err.className = 'error';
+      err.id = 'othersError';
+      err.textContent = 'Please type your course name & code.';
+      row.appendChild(err);
+    }
+
+    codesSection.appendChild(row);
+  });
+}
 
 function refreshCourseUI(){
   const checked = checkboxes.filter(c => c.checked);
@@ -142,6 +167,7 @@ function refreshCourseUI(){
     c.closest('.course-opt').classList.toggle('checked', c.checked);
   });
   extraNote.classList.toggle('show', checked.length > 2);
+  buildCodesSection();
 }
 checkboxes.forEach(c => c.addEventListener('change', refreshCourseUI));
 refreshCourseUI();
@@ -174,22 +200,24 @@ form.addEventListener('submit', async (e) => {
   courseError.classList.remove('show');
   fileError.classList.remove('show');
   levelError.classList.remove('show');
-  othersError.classList.remove('show');
+  const othersErrorEl = document.getElementById('othersError');
+  if(othersErrorEl) othersErrorEl.classList.remove('show');
 
   const level = document.querySelector('#levelPills input[name="level"]:checked');
-  let checked = checkboxes.filter(c => c.checked).map(c => c.value);
+  const checkedBoxes = checkboxes.filter(c => c.checked);
   let valid = true;
 
   if(!level){
     levelError.classList.add('show');
     valid = false;
   }
-  if(checked.length < 2){
+  if(checkedBoxes.length < 2){
     courseError.classList.add('show');
     valid = false;
   }
-  if(othersCheck.checked && !othersInput.value.trim()){
-    othersError.classList.add('show');
+  const othersChecked = checkedBoxes.some(c => c.value === 'OTHERS');
+  if(othersChecked && !(codesData['OTHERS'] || '').trim()){
+    if(othersErrorEl) othersErrorEl.classList.add('show');
     valid = false;
   }
   if(!fileInput.files.length){
@@ -198,11 +226,15 @@ form.addEventListener('submit', async (e) => {
   }
   if(!valid) return;
 
-  // replace the generic "OTHERS" value with what the student actually typed
-  if(othersCheck.checked){
-    checked = checked.filter(c => c !== 'OTHERS');
-    checked.push('Others: ' + othersInput.value.trim());
-  }
+  // build final course list, folding in any typed course codes
+  const checked = checkedBoxes.map(c => {
+    const val = c.value;
+    const code = (codesData[val] || '').trim();
+    if(val === 'OTHERS'){
+      return 'Others: ' + code;
+    }
+    return code ? `${val} (${code})` : val;
+  });
 
   sessionStorage.setItem('h1_courses', JSON.stringify(checked));
   sessionStorage.setItem('h1_level', level.value);
