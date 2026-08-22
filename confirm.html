@@ -22,7 +22,7 @@
     <h1>You're all set</h1>
     <p class="sub" id="summary">Your registration has been received. Tap below to join the class WhatsApp group — your tutor will confirm your payment there.</p>
 
-    <a href="#" class="btn wa-btn" id="waBtn" target="_blank" rel="noopener">Join the WhatsApp group →</a>
+    <a href="#" class="btn wa-btn" id="waBtn" target="_blank" rel="noopener">Send my details on WhatsApp →</a>
 
     <p class="inquiry">For inquiries, call or WhatsApp <a href="tel:07018203064">0701 820 3064</a></p>
   </div>
@@ -30,14 +30,29 @@
 
 <script>
 const name = sessionStorage.getItem('h1_name') || '';
+const phone = sessionStorage.getItem('h1_phone') || '';
+const email = sessionStorage.getItem('h1_email') || '';
 const department = sessionStorage.getItem('h1_department') || '';
+const classType = sessionStorage.getItem('h1_classType') || '';
+const level = sessionStorage.getItem('h1_level') || '';
+const courses = JSON.parse(sessionStorage.getItem('h1_courses') || '[]');
+const subjects = ['GST', 'ENT', 'GNS', 'EDU (free)'].join(', ') + (courses.length ? ', ' + courses.join(', ') : '');
 
 if(name){
   document.getElementById('summary').textContent =
-    'Thanks, ' + name + '! Your registration has been received. Tap below to join the class WhatsApp group — your tutor will confirm your payment there.';
+    'Thanks, ' + name + '! Your registration has been received. Tap below to send your details to your tutor on WhatsApp — they will confirm your payment there.';
 }
 
-const message = `Hello, I just subscribed to HAY ONE ACADEMIC CENTRE. My name is ${name || '___'}, and my department is ${department || '___'}.`;
+const message =
+`Hello, I just subscribed to HAY ONE ACADEMIC CENTRE.
+Name: ${name || '___'}
+Phone: ${phone || '___'}
+Email: ${email || '___'}
+Department: ${department || '___'}
+Class type: ${classType || '___'}
+Level: ${level || '___'}
+Courses: ${subjects || '___'}`;
+
 const waLink = 'https://wa.me/2347018203064?text=' + encodeURIComponent(message);
 document.getElementById('waBtn').href = waLink;
 </script>

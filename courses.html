@@ -46,8 +46,16 @@
       <label class="course-opt"><input type="checkbox" name="course" value="PHY"><span class="code">PHY</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="MAT"><span class="code">MAT</span></label>
       <label class="course-opt"><input type="checkbox" name="course" value="BUSINESS MATHS"><span class="code">BUSINESS MATHS</span></label>
+      <label class="course-opt"><input type="checkbox" id="othersCheck" value="OTHERS"><span class="code">OTHERS</span></label>
     </div>
     <div class="free-note">GST, ENT, GNS and EDU are already included free — no need to select them.</div>
+
+    <div id="othersFieldWrap" style="display:none; margin-top:14px;">
+      <label for="othersInput">Type your course code(s)</label>
+      <input type="text" id="othersInput" placeholder="e.g. GEO, POL">
+      <div class="error" id="othersError">Please type the course code(s).</div>
+    </div>
+
     <div class="error" id="courseError">Please select at least 2 courses.</div>
 
     <div class="price-row">
@@ -118,6 +126,15 @@ const grid = document.getElementById('courseGrid');
 const checkboxes = Array.from(grid.querySelectorAll('input[type="checkbox"]:not([disabled])'));
 const courseError = document.getElementById('courseError');
 const extraNote = document.getElementById('extraNote');
+const othersCheck = document.getElementById('othersCheck');
+const othersFieldWrap = document.getElementById('othersFieldWrap');
+const othersInput = document.getElementById('othersInput');
+const othersError = document.getElementById('othersError');
+
+othersCheck.addEventListener('change', () => {
+  othersFieldWrap.style.display = othersCheck.checked ? 'block' : 'none';
+  if(!othersCheck.checked){ othersInput.value = ''; }
+});
 
 function refreshCourseUI(){
   const checked = checkboxes.filter(c => c.checked);
@@ -157,9 +174,10 @@ form.addEventListener('submit', async (e) => {
   courseError.classList.remove('show');
   fileError.classList.remove('show');
   levelError.classList.remove('show');
+  othersError.classList.remove('show');
 
   const level = document.querySelector('#levelPills input[name="level"]:checked');
-  const checked = checkboxes.filter(c => c.checked).map(c => c.value);
+  let checked = checkboxes.filter(c => c.checked).map(c => c.value);
   let valid = true;
 
   if(!level){
@@ -170,11 +188,21 @@ form.addEventListener('submit', async (e) => {
     courseError.classList.add('show');
     valid = false;
   }
+  if(othersCheck.checked && !othersInput.value.trim()){
+    othersError.classList.add('show');
+    valid = false;
+  }
   if(!fileInput.files.length){
     fileError.classList.add('show');
     valid = false;
   }
   if(!valid) return;
+
+  // replace the generic "OTHERS" value with what the student actually typed
+  if(othersCheck.checked){
+    checked = checked.filter(c => c !== 'OTHERS');
+    checked.push('Others: ' + othersInput.value.trim());
+  }
 
   sessionStorage.setItem('h1_courses', JSON.stringify(checked));
   sessionStorage.setItem('h1_level', level.value);
@@ -190,6 +218,7 @@ form.addEventListener('submit', async (e) => {
       fd.append('phone', sessionStorage.getItem('h1_phone'));
       fd.append('email', sessionStorage.getItem('h1_email'));
       fd.append('department', sessionStorage.getItem('h1_department'));
+      fd.append('classType', sessionStorage.getItem('h1_classType'));
       fd.append('level', level.value);
       fd.append('subjects', 'GST + ENT + GNS + EDU (free) + ' + checked.join(' + '));
       fd.append('screenshot', fileInput.files[0]);
